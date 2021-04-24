@@ -17,25 +17,26 @@ import java.util.Map;
 
 public class TestSpringV1 {
 
-	@Test
-	public void test() throws Exception {
-		// 创建UserServiceImpl对象
-		UserServiceImpl userService=new UserServiceImpl();
-		UserDao userDao=new UserDaoImpl();
-		userService.setUserDao(userDao);
-		BasicDataSource dataSource=new BasicDataSource();
-		dataSource.setDriverClassName("com.mysql.jdbc.Driver");
-		dataSource.setUrl("jdbc:mysql://localhost:3306/mybatis?characterEncoding=utf-8");
-		dataSource.setUsername("root");
-		dataSource.setPassword("123456");
+    @Test
+    public void test() throws Exception {
+        // 创建UserServiceImpl对象
+        UserServiceImpl userService = new UserServiceImpl();
+        UserDaoImpl userDao = new UserDaoImpl();
+        userService.setUserDao(userDao);
+        BasicDataSource dataSource = new BasicDataSource();
+        dataSource.setDriverClassName("com.mysql.jdbc.Driver");
+        dataSource.setUrl("jdbc:mysql://localhost:3306/mybatis?characterEncoding=utf-8");
+        dataSource.setUsername("root");
+        dataSource.setPassword("123456");
+        userDao.setDataSource(dataSource);
 
-		// 根据用户名称查询用户信息
+        // 根据用户名称查询用户信息
 
-		User user=new User();
-		user.setUsername("王五");
-		Map<String, Object> param = new HashMap<>();
-		param.put("username","王五");
-		List<User> users = userService.queryUsers(param);
-		System.out.println(users);
-	}
+        User user = new User();
+        user.setUsername("王五");
+        Map<String, Object> param = new HashMap<>();
+        param.put("username", "王五");
+        List<User> users = userService.queryUsers(param);
+        System.out.println(users);
+    }
 }
