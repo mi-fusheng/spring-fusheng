@@ -2,6 +2,9 @@ package com.mi.fusheng.test;
 
 import com.mi.fusheng.dao.UserDaoImpl;
 import com.mi.fusheng.ioc.BeanDefinition;
+import com.mi.fusheng.ioc.PropertyValue;
+import com.mi.fusheng.ioc.RuntimeBeanReference;
+import com.mi.fusheng.ioc.TypedStringValue;
 import com.mi.fusheng.po.User;
 import com.mi.fusheng.service.UserService;
 import com.mi.fusheng.service.UserServiceImpl;
@@ -14,6 +17,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.InputStream;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -104,7 +110,7 @@ public class TestSpringV2 {
         //根据beanName去BeanDefinitions中获取对应的Bean信息
         BeanDefinition beanDefinition = beanDefinitions.get(beanName);
 
-        if (beanDefinition == null || beanDefinition.getClazzName() == null) {
+        if (beanDefinition == null) {
             return null;
         }
 
@@ -118,13 +124,134 @@ public class TestSpringV2 {
             //根据Bean到信息去创建Bean的对象
             sinleTonObject = crateBean(beanDefinition);
         } else {
-
+            //TODO
         }
 
         return sinleTonObject;
     }
 
     private Object crateBean(BeanDefinition beanDefinition) {
+        Class<?> clazzType = beanDefinition.getClazzType();
+
+        if (clazzType == null) {
+            return null;
+        }
+
+        Object bean = createInstanceBean(clazzType);
+
+        if (bean == null) {
+            return null;
+        }
+
+        populateBean(bean, beanDefinition);
+
+        initMethod(bean, beanDefinition);
+
+        return null;
+    }
+
+    private void initMethod(Object bean, BeanDefinition beanDefinition) {
+        //TODO 判断Bean是否实现了Aware接口
+        //TODO  判断是否实现了InitilizingBean接口，如果实现，则直接调用该Bean的afterPropertiesSet方法去初始化
+
+        // 通过调用Bean标签指定的初始化方法，比如通过init-method标签属性指定到方法
+
+        String initMethod = beanDefinition.getInitMethod();
+
+        if (initMethod == null) {
+            return;
+        }
+
+        invokeInitMethod(bean, initMethod);
+
+    }
+
+    private void invokeInitMethod(Object bean, String initMethod) {
+        try {
+            Class<?> clazz = bean.getClass();
+            Method method = clazz.getDeclaredMethod(initMethod);
+            method.invoke(bean);
+        } catch (Exception e) {
+
+        }
+
+    }
+
+    private void populateBean(Object bean, BeanDefinition beanDefinition) {
+        List<PropertyValue> propertyValues = beanDefinition.getPropertyValues();
+
+        if (propertyValues != null && !propertyValues.isEmpty()) {
+            for (PropertyValue pv : propertyValues) {
+                String name = pv.getName();
+                Object value = pv.getValue();
+
+                Object valueToUse = null;
+
+                if (value instanceof TypedStringValue) {
+                    TypedStringValue typedStringValue = (TypedStringValue) value;
+                    String stringValue = typedStringValue.getValue();
+                    Class<?> targetType = typedStringValue.getTargetType();
+
+                    //TODO 通过策略模式去优化
+                    //typedStringValue.getTypeHandler();
+                    if (targetType == Integer.class) {
+                        valueToUse = Integer.parseInt(stringValue);
+
+                    } else if (targetType == String.class) {
+                        valueToUse = stringValue;
+                    }
+
+
+                } else if (value instanceof RuntimeBeanReference) {
+                    RuntimeBeanReference runtimeBeanReference = (RuntimeBeanReference) value;
+                    String ref = runtimeBeanReference.getRef();
+                    valueToUse = getBean(ref);
+
+                }
+
+                //通过反射去给Bean实例设置指定name的值
+                setProperty(bean, name, valueToUse);
+
+            }
+        }
+
+
+    }
+
+    private void setProperty(Object bean, String name, Object valueToUse) {
+        try {
+            Class<?> clazz = bean.getClass();
+            Field field = clazz.getDeclaredField(name);
+            field.setAccessible(true);
+
+            field.set(bean, valueToUse);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private Object createInstanceBean(Class<?> clazzType) {
+
+        //TODO 通过实例工厂方式去创建Bean实例，比如通过factory-bean标签属性指的FactoryBean工厂去创建；
+        //TODO 通过静态工厂方法方式去创建Bean实例，比如通过factory-method标签属性指的静态方法去创建实例；
+        //构造方法去创建Bean实例（反射，此处只针对无参构造进行操作）
+        Object bean = doCreateInstanceWithConstructor(clazzType);
+
+
+        return null;
+    }
+
+    private Object doCreateInstanceWithConstructor(Class<?> clazzType) {
+        try {
+            // TODO 获取所有的构造方法
+            // TODO 根据BeanDefinition中存储的constructor-arg子标签的数据来获取构造参数类型
+            Constructor<?> constructor = clazzType.getDeclaredConstructor();
+            return constructor.newInstance();
+        } catch (Exception e) {
+            //handle Exception
+        }
+
         return null;
     }
 }
