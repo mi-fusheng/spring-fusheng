@@ -55,6 +55,7 @@ public class TestSpringV2 {
       // 创建文档对象
       Document document = createDocument(inputStream);
 
+      //按照Spring定义的标签去解析Document
       praseBeanDefinitions(document.getRootElement());
    }
 
@@ -106,16 +107,23 @@ public class TestSpringV2 {
 
          beanName = beanName == null ? clazzType.getSimpleName() : beanName;
 
+         //创建beanDefinition对象
+         //TODO 可以使用构建者模式优化
          BeanDefinition beanDefinition = new BeanDefinition(clazzName, beanName);
 
          beanDefinition.setInitMethod(initMethod);
          beanDefinition.setScope(scope);
 
+         //获取property子标签集合
          List<Element> propertyElements = beanElement.elements();
 
          for(Element propertyElement : propertyElements) {
             prasePropertyElement(beanDefinition, propertyElement);
          }
+
+         //注册BeanDefinition信息
+         this.beanDefinitions.put(name, beanDefinition);
+
       }
       catch(ClassNotFoundException e) {
          e.printStackTrace();
@@ -141,8 +149,36 @@ public class TestSpringV2 {
       PropertyValue pv = null;
 
       if(value != null && !"".equals(value)) {
+         //因为Spring配置文件中的value是String类型，而对象中的属性是各种各样的，所以需要存储类型
+         TypedStringValue typedStringValue = new TypedStringValue(value);
+         Class<?> targetType = getTypeByFieldName(beanDefinition.getClazzName(), name);
+         typedStringValue.setTargetType(targetType);
 
+         pv = new PropertyValue(name, typedStringValue);
+         beanDefinition.addPropertyValue(pv);
       }
+      else if(ref != null && !ref.equals("")) {
+         RuntimeBeanReference reference = new RuntimeBeanReference(ref);
+         pv = new PropertyValue(name, reference);
+         beanDefinition.addPropertyValue(pv);
+      }
+      else {
+         return;
+      }
+   }
+
+   private Class<?> getTypeByFieldName(String clazzName, String name) {
+
+      try {
+         Class<?> clazz = Class.forName(clazzName);
+         Field field = clazz.getDeclaredField(name);
+         return field.getType();
+      }
+      catch(Exception e) {
+         e.printStackTrace();
+      }
+
+      return null;
    }
 
    private Document createDocument(InputStream inputStream) {
