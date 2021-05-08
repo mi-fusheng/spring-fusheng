@@ -40,4 +40,18 @@ public class ReflectUtils {
         }
         return null;
     }
+
+    public static Class<?> getTypeByFieldName(String clazzName, String name) {
+
+        try {
+            Class<?> clazz = Class.forName(clazzName);
+            Field field = clazz.getDeclaredField(name);
+            return field.getType();
+        }
+        catch(Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
 }
