@@ -122,7 +122,7 @@ public class TestSpringV2 {
          }
 
          //注册BeanDefinition信息
-         this.beanDefinitions.put(name, beanDefinition);
+         this.beanDefinitions.put(beanName, beanDefinition);
 
       }
       catch(ClassNotFoundException e) {
@@ -256,7 +256,7 @@ public class TestSpringV2 {
 
       initMethod(bean, beanDefinition);
 
-      return null;
+      return bean;
    }
 
    private void initMethod(Object bean, BeanDefinition beanDefinition) {
@@ -352,7 +352,7 @@ public class TestSpringV2 {
       Object bean = doCreateInstanceWithConstructor(clazzType);
 
 
-      return null;
+      return bean;
    }
 
    private Object doCreateInstanceWithConstructor(Class<?> clazzType) {
