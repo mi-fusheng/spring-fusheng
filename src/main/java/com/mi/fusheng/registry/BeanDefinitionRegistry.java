@@ -16,5 +16,5 @@ public interface BeanDefinitionRegistry {
     /**
      * 存储BeanDefinition
      * */
-    void registerBeanDefinition(String name,BeanDefinition beanDefinition);
+    void registerBeanDefinition(String name, BeanDefinition beanDefinition);
 }

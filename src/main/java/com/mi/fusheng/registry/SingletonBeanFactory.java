@@ -14,5 +14,5 @@ public interface SingletonBeanFactory {
     /**
      * 存储单例Bean
      * */
-    void addSingleton(String name,Object bean);
+    void addSingleton(String name, Object bean);
 }
